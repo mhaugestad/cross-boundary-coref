@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cross-boundary-coref"
+version = "0.1.0"
+description = "Cross-boundary token-pair coreference affinity model"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26",
+    "torch>=2.2",
+    "transformers>=4.40",
+]
+
+[project.optional-dependencies]
+training = [
+    "datasets>=2.19",
+    "lightning>=2.2",
+    "pyyaml>=6.0",
+    "scipy>=1.12",
+]
+visualization = ["matplotlib>=3.8"]
+test = ["pytest>=8.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cross_boundary_coref"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
