@@ -3,11 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+import json
 
 import numpy as np
 import torch
 from torch import nn
 from transformers import AutoConfig, AutoModel, AutoTokenizer
+from huggingface_hub import hf_hub_download
+from safetensors.torch import load_file
 
 
 @dataclass(frozen=True)
@@ -84,6 +87,37 @@ class AffinityModel(nn.Module):
         model.to(device)
         model.eval()
         model.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        return model
+
+    @classmethod
+    def from_pretrained(
+        cls,
+        repo_id: str,
+        *,
+        revision: str | None = None,
+        device: str | torch.device = "cpu",
+    ) -> AffinityModel:
+        config_path = hf_hub_download(
+            repo_id,
+            "affinity_config.json",
+            revision=revision,
+        )
+        with Path(config_path).open(encoding="utf-8") as file:
+            config = json.load(file)
+        if config.get("format") != "cross-boundary-coref-affinity":
+            raise ValueError(f"{repo_id} is not a supported affinity model repository")
+
+        model_name = config["encoder_name"]
+        model = cls(model_name, load_pretrained=False)
+        weights_path = hf_hub_download(
+            repo_id,
+            "model.safetensors",
+            revision=revision,
+        )
+        model.load_state_dict(load_file(weights_path, device="cpu"), strict=True)
+        model.to(device)
+        model.eval()
+        model.tokenizer = AutoTokenizer.from_pretrained(repo_id, revision=revision)
         return model
 
     @torch.inference_mode()

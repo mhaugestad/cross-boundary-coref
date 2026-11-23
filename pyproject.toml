@@ -8,7 +8,9 @@ version = "0.1.0"
 description = "Cross-boundary token-pair coreference affinity model"
 requires-python = ">=3.10"
 dependencies = [
+    "huggingface_hub>=0.25",
     "numpy>=1.26",
+    "safetensors>=0.4",
     "torch>=2.2",
     "transformers>=4.40",
 ]
