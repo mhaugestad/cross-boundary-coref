@@ -41,9 +41,7 @@ The input is processed by a DistilBERT encoder. A bilinear affinity head then co
 
 The result is a two-dimensional affinity matrix:
 
-$
-A \in \mathbb{R}^{|C| \times |Q|}
-$
+$A \in \mathbb{R}^{|C| \times |Q|}$
 
 where $(C)$ represents the context tokens and $(Q)$ represents the chunk tokens.
 
@@ -57,10 +55,10 @@ First, it provides **observability**. We can inspect the affinity matrix to see 
 
 Second, it separates representation learning from relation extraction. The affinity matrix can be processed by different decoding strategies. This repository includes a deterministic rectangle decoder that identifies high-affinity regions and converts them into antecedent–anaphor span pairs.
 
-![Architecture of the cross-boundary affinity model. A shared DistilBERT encoder produces contextual token representations, which are compared using a bias-free bilinear scoring head. The resulting token-pair affinity matrix exposes relationships that can be extracted using different decoding strategies.](image-1.png)
+![Architecture of the cross-boundary affinity model. A shared DistilBERT encoder produces contextual token representations, which are compared using a bias-free bilinear scoring head. The resulting token-pair affinity matrix exposes relationships that can be extracted using different decoding strategies.](images/image-1.png)
 
 
-![Example of a token affinity matrix](image.png)
+![Example of a token affinity matrix](images/image.png)
 
 # Training and Data
 
