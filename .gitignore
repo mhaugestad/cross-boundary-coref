@@ -10,7 +10,6 @@ checkpoints/
 *.pt
 *.pth
 *.safetensors
-*.png
 *.pdf
 *.svg
 *.log
