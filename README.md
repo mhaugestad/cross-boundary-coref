@@ -31,6 +31,48 @@ Beyond this practical application, the project explores two ideas:
 - **Observability:** Rather than directly producing coreference clusters, the model generates a token-pair affinity matrix that exposes learned relationships between context and chunk tokens. These scores can be inspected, visualized, and decoded using different strategies.
 - **Computational efficiency:** In our benchmarks, the model achieves competitive cross-boundary reference resolution performance with lower inference latency than the evaluated conventional coreference systems.
 
+# Example usage
+```
+from cross_boundary_coref import AffinityModel, RectangleDecoder, plot_affinity, resolve_chunk
+
+
+model = AffinityModel.from_pretrained("mhaugestad/cross-boundary-coref")
+result = model.predict_affinity("Marie Curie discovered radium.", "She later won a Nobel Prize.")
+
+print(result.affinity.shape)
+=> (9,7)
+
+print(type(result.affinity))
+=> <class 'numpy.ndarray'>
+```
+
+```
+print(RectangleDecoder().decode(result))
+=> [
+      RelationRectangle(
+          context=TokenSpan(start=0, end=4),
+          chunk=TokenSpan(start=0, end=1),
+          confidence=0.9988625347614288,
+          component_size=4
+      )
+]
+```
+plot_affinity(result)
+![Example of a token affinity matrix](images/image.png)
+
+To annotate chunk mentions with their decoded context antecedents, supply the
+model and a configured decoder:
+
+```python
+context = "Marie Curie discovered radium."
+chunk = "She later won a Nobel Prize."
+annotated = resolve_chunk(context, chunk, model, RectangleDecoder(threshold=0.9))
+print(annotated)  # For example: She[Marie Curie] later won a Nobel Prize.
+```
+
+`resolve_chunk` runs affinity prediction itself; pass `max_length` if tokenization
+should be limited. Overlapping mentions retain the highest-confidence relation.
+
 # Model Architecture
 
 The architecture takes inspiration from the attention mechanism used in Transformers.
@@ -56,9 +98,6 @@ First, it provides **observability**. We can inspect the affinity matrix to see 
 Second, it separates representation learning from relation extraction. The affinity matrix can be processed by different decoding strategies. This repository includes a deterministic rectangle decoder that identifies high-affinity regions and converts them into antecedent–anaphor span pairs.
 
 ![Architecture of the cross-boundary affinity model. A shared DistilBERT encoder produces contextual token representations, which are compared using a bias-free bilinear scoring head. The resulting token-pair affinity matrix exposes relationships that can be extracted using different decoding strategies.](images/image-1.png)
-
-
-![Example of a token affinity matrix](images/image.png)
 
 # Training and Data
 

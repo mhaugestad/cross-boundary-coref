@@ -2,7 +2,6 @@ seed: 42
 
 model:
   encoder_name: distilbert-base-cased
-  # External Task 21 Stage 2 checkpoint; provide --initial-checkpoint elsewhere when needed.
   initial_checkpoint: ../../experiments/coreference-curriculum-rerun/20261105T140945Z-c503c0b4/stage_02_real/best.ckpt
   initial_checkpoint_sha256: 773b71b7d7182ee7b113695d02d890d9fbe2a61103fafe8a9d4f45bd54782c91
 
@@ -35,7 +34,7 @@ datasets:
     dev_split: dev
 
 validation:
-  repository: mhaugestad/contextualise-context
+  repository: mhaugestad/cross-boundary-coref-llm-annotated
   split: dev
 
 training:

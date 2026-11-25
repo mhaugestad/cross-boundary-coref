@@ -6,7 +6,7 @@ from typing import Any
 
 import numpy as np
 
-from cross_boundary_coref.model import AffinityResult
+from cross_boundary_coref.model import AffinityModel, AffinityResult
 
 
 @dataclass(frozen=True, order=True)
@@ -129,3 +129,54 @@ class RectangleDecoder:
             connectivity=self.connectivity,
             valid_mask=valid_mask,
         )
+
+
+def resolve_chunk(
+    context: str,
+    chunk: str,
+    model: AffinityModel,
+    decoder: RectangleDecoder,
+    *,
+    max_length: int | None = None,
+) -> str:
+    """Annotate chunk mentions with their highest-confidence context antecedents.
+
+    For overlapping mentions, retain the highest-confidence non-overlapping
+    relations; ties are resolved by character position.
+    """
+    result = model.predict_affinity(context, chunk, max_length=max_length)
+    relations = decoder.decode(result)
+    candidates = []
+    for relation in relations:
+        antecedent_start = result.context_offsets[relation.context.start][0]
+        antecedent_end = result.context_offsets[relation.context.end - 1][1]
+        mention_start = result.chunk_offsets[relation.chunk.start][0]
+        mention_end = result.chunk_offsets[relation.chunk.end - 1][1]
+        if not (
+            0 <= antecedent_start < antecedent_end <= len(context)
+            and 0 <= mention_start < mention_end <= len(chunk)
+        ):
+            raise ValueError("Decoded relation has invalid character offsets")
+        candidates.append(
+            (
+                -relation.confidence,
+                mention_start,
+                mention_end,
+                antecedent_start,
+                antecedent_end,
+            )
+        )
+
+    selected = []
+    for _, start, end, antecedent_start, antecedent_end in sorted(candidates):
+        if any(
+            start < other_end and end > other_start
+            for other_start, other_end, _ in selected
+        ):
+            continue
+        selected.append((start, end, context[antecedent_start:antecedent_end]))
+
+    annotated = chunk
+    for _, end, antecedent in sorted(selected, reverse=True):
+        annotated = annotated[:end] + f"[{antecedent}]" + annotated[end:]
+    return annotated
